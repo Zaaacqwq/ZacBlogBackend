@@ -12,7 +12,7 @@ import com.zaaac.domain.entity.Comment;
  * @since 2024-05-12 03:55:01
  */
 public interface CommentService extends IService<Comment> {
-    ResponseResult commentList(Long articleId, Integer pageNum, Integer pageSize);
+    ResponseResult commentList(String commentType, Long articleId, Integer pageNum, Integer pageSize);
 
     ResponseResult addComment(Comment comment);
 }
