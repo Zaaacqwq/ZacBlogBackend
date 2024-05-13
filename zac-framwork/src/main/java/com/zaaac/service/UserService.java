@@ -1,6 +1,7 @@
 package com.zaaac.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.zaaac.domain.ResponseResult;
 import com.zaaac.domain.entity.User;
 
 
@@ -12,5 +13,10 @@ import com.zaaac.domain.entity.User;
  */
 public interface UserService extends IService<User> {
 
+    ResponseResult userInfo();
+
+    ResponseResult updateUserInfo(User user);
+
+    ResponseResult register(User user);
 }
 
