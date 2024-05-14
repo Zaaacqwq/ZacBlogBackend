@@ -8,6 +8,7 @@ import com.zaaac.mapper.MenuMapper;
 import com.zaaac.service.MenuService;
 import com.zaaac.utils.SecurityUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +26,9 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     @Override
     public List<String> selectPermsByUserId(Long id) {
         //如果是管理员，返回所有的权限
-        if(id == 1L){
+        if(SecurityUtils.isAdmin()){
             LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
-            wrapper.in(Menu::getMenuType, SystemConstants.MENU,SystemConstants.BUTTON);
+            wrapper.in(Menu::getMenuType,SystemConstants.MENU,SystemConstants.BUTTON);
             wrapper.eq(Menu::getStatus,SystemConstants.STATUS_NORMAL);
             List<Menu> menus = list(wrapper);
             List<String> perms = menus.stream()
@@ -58,6 +59,31 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         return menuTree;
     }
 
+    @Override
+    public List<Menu> selectMenuList(Menu menu) {
+
+        LambdaQueryWrapper<Menu> queryWrapper = new LambdaQueryWrapper<>();
+        //menuName模糊查询
+        queryWrapper.like(StringUtils.hasText(menu.getMenuName()),Menu::getMenuName,menu.getMenuName());
+        queryWrapper.eq(StringUtils.hasText(menu.getStatus()),Menu::getStatus,menu.getStatus());
+        //排序 parent_id和order_num
+        queryWrapper.orderByAsc(Menu::getParentId,Menu::getOrderNum);
+        List<Menu> menus = list(queryWrapper);;
+        return menus;
+    }
+
+    @Override
+    public boolean hasChild(Long menuId) {
+        LambdaQueryWrapper<Menu> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Menu::getParentId,menuId);
+        return count(queryWrapper) != 0;
+    }
+
+    @Override
+    public List<Long> selectMenuListByRoleId(Long roleId) {
+        return getBaseMapper().selectMenuListByRoleId(roleId);
+    }
+
     private List<Menu> builderMenuTree(List<Menu> menus, Long parentId) {
         List<Menu> menuTree = menus.stream()
                 .filter(menu -> menu.getParentId().equals(parentId))
@@ -80,4 +106,3 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         return childrenList;
     }
 }
-
