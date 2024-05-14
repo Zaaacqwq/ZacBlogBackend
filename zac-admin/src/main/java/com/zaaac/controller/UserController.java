@@ -1,6 +1,8 @@
 package com.zaaac.controller;
 
 import com.zaaac.domain.ResponseResult;
+import com.zaaac.domain.dto.ChangeRoleStatusDto;
+import com.zaaac.domain.dto.ChangeUserStatusDto;
 import com.zaaac.domain.entity.Role;
 import com.zaaac.domain.entity.User;
 import com.zaaac.domain.vo.UserInfoAndRoleIdsVo;
@@ -86,5 +88,13 @@ public class UserController {
         }
         userService.removeByIds(userIds);
         return ResponseResult.okResult();
+    }
+
+    @PutMapping("/changeStatus")
+    public ResponseResult changeStatus(@RequestBody ChangeUserStatusDto userStatusDto){
+        User user = new User();
+        user.setId(userStatusDto.getUserId());
+        user.setStatus(userStatusDto.getStatus());
+        return ResponseResult.okResult(userService.updateById(user));
     }
 }
