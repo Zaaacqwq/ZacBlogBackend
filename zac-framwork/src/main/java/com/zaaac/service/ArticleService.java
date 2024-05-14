@@ -2,6 +2,7 @@ package com.zaaac.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zaaac.domain.ResponseResult;
+import com.zaaac.domain.dto.AddArticleDto;
 import com.zaaac.domain.entity.Article;
 
 public interface ArticleService extends IService<Article> {
@@ -11,4 +12,6 @@ public interface ArticleService extends IService<Article> {
     ResponseResult getArticleDetail(Long id);
 
     ResponseResult updateViewCount(Long id);
+
+    ResponseResult add(AddArticleDto article);
 }
