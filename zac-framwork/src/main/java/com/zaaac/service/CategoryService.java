@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.zaaac.domain.ResponseResult;
 import com.zaaac.domain.entity.Category;
 import com.zaaac.domain.vo.CategoryVo;
+import com.zaaac.domain.vo.PageVo;
 
 import java.util.List;
 
@@ -19,5 +20,7 @@ public interface CategoryService extends IService<Category> {
     ResponseResult getCategoryList();
 
     List<CategoryVo> listAllCategory();
+
+    PageVo selectCategoryPage(Category category, Integer pageNum, Integer pageSize);
 }
 

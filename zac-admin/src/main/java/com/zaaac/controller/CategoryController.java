@@ -6,15 +6,14 @@ import com.zaaac.domain.ResponseResult;
 import com.zaaac.domain.entity.Category;
 import com.zaaac.domain.vo.CategoryVo;
 import com.zaaac.domain.vo.ExcelCategoryVo;
+import com.zaaac.domain.vo.PageVo;
 import com.zaaac.enums.AppHttpCodeEnum;
 import com.zaaac.service.CategoryService;
 import com.zaaac.utils.BeanCopyUtils;
 import com.zaaac.utils.WebUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -24,12 +23,43 @@ import java.util.List;
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
-    
+
     @GetMapping("/listAllCategory")
     public ResponseResult listAllCategory(){
         List<CategoryVo> list = categoryService.listAllCategory();
         return ResponseResult.okResult(list);
     }
+    @PutMapping
+    public ResponseResult edit(@RequestBody Category category){
+        categoryService.updateById(category);
+        return ResponseResult.okResult();
+    }
+
+    @DeleteMapping(value = "/{id}")
+    public ResponseResult remove(@PathVariable(value = "id")Long id){
+        categoryService.removeById(id);
+        return ResponseResult.okResult();
+    }
+
+    @GetMapping(value = "/{id}")
+    public ResponseResult getInfo(@PathVariable(value = "id")Long id){
+        Category category = categoryService.getById(id);
+        return ResponseResult.okResult(category);
+    }
+    @PostMapping
+    public ResponseResult add(@RequestBody Category category){
+        categoryService.save(category);
+        return ResponseResult.okResult();
+    }
+    /**
+     * 获取用户列表
+     */
+    @GetMapping("/list")
+    public ResponseResult list(Category category, Integer pageNum, Integer pageSize) {
+        PageVo pageVo = categoryService.selectCategoryPage(category,pageNum,pageSize);
+        return ResponseResult.okResult(pageVo);
+    }
+
 
     @PreAuthorize("@ps.hasPermission('content:category:export')")
     @GetMapping("/export")
