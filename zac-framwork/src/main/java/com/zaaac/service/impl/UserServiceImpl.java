@@ -1,19 +1,26 @@
 package com.zaaac.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zaaac.domain.ResponseResult;
 import com.zaaac.domain.entity.User;
+import com.zaaac.domain.entity.UserRole;
+import com.zaaac.domain.vo.PageVo;
 import com.zaaac.domain.vo.UserInfoVo;
+import com.zaaac.domain.vo.UserVo;
 import com.zaaac.enums.AppHttpCodeEnum;
 import com.zaaac.exception.SystemException;
 import com.zaaac.mapper.UserMapper;
+import com.zaaac.service.UserRoleService;
 import com.zaaac.utils.BeanCopyUtils;
 import com.zaaac.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.zaaac.service.UserService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -79,15 +86,80 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return ResponseResult.okResult();
     }
 
+    @Override
+    public ResponseResult selectUserPage(User user, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper();
 
-//    @Autowired
-//    private UserRoleService userRoleService;
-//
-//    private void insertUserRole(User user) {
-//        List<UserRole> sysUserRoles = Arrays.stream(user.getRoleIds())
-//                .map(roleId -> new UserRole(user.getId(), roleId)).collect(Collectors.toList());
-//        userRoleService.saveBatch(sysUserRoles);
-//    }
+        queryWrapper.like(StringUtils.hasText(user.getUserName()),User::getUserName,user.getUserName());
+        queryWrapper.eq(StringUtils.hasText(user.getStatus()),User::getStatus,user.getStatus());
+        queryWrapper.eq(StringUtils.hasText(user.getPhonenumber()),User::getPhonenumber,user.getPhonenumber());
+
+        Page<User> page = new Page<>();
+        page.setCurrent(pageNum);
+        page.setSize(pageSize);
+        page(page,queryWrapper);
+
+        //转换成VO
+        List<User> users = page.getRecords();
+        List<UserVo> userVoList = users.stream()
+                .map(u -> BeanCopyUtils.copyBean(u, UserVo.class))
+                .collect(Collectors.toList());
+        PageVo pageVo = new PageVo();
+        pageVo.setTotal(page.getTotal());
+        pageVo.setRows(userVoList);
+        return ResponseResult.okResult(pageVo);
+    }
+
+    @Override
+    public boolean checkUserNameUnique(String userName) {
+        return count(Wrappers.<User>lambdaQuery().eq(User::getUserName,userName))==0;
+    }
+
+    @Override
+    public boolean checkPhoneUnique(User user) {
+        return count(Wrappers.<User>lambdaQuery().eq(User::getPhonenumber,user.getPhonenumber()))==0;
+    }
+
+    @Override
+    public boolean checkEmailUnique(User user) {
+        return count(Wrappers.<User>lambdaQuery().eq(User::getEmail,user.getEmail()))==0;
+    }
+
+    @Override
+    @Transactional
+    public ResponseResult addUser(User user) {
+        //密码加密处理
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        save(user);
+
+        if(user.getRoleIds()!=null&&user.getRoleIds().length>0){
+            insertUserRole(user);
+        }
+        return ResponseResult.okResult();
+    }
+
+    @Override
+    @Transactional
+    public void updateUser(User user) {
+        // 删除用户与角色关联
+        LambdaQueryWrapper<UserRole> userRoleUpdateWrapper = new LambdaQueryWrapper<>();
+        userRoleUpdateWrapper.eq(UserRole::getUserId,user.getId());
+        userRoleService.remove(userRoleUpdateWrapper);
+
+        // 新增用户与角色管理
+        insertUserRole(user);
+        // 更新用户信息
+        updateById(user);
+    }
+
+    @Autowired
+    private UserRoleService userRoleService;
+
+    private void insertUserRole(User user) {
+        List<UserRole> sysUserRoles = Arrays.stream(user.getRoleIds())
+                .map(roleId -> new UserRole(user.getId(), roleId)).collect(Collectors.toList());
+        userRoleService.saveBatch(sysUserRoles);
+    }
 
     private boolean nickNameExist(String nickName) {
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
