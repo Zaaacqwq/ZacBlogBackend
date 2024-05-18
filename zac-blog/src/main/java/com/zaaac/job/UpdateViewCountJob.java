@@ -20,19 +20,23 @@ public class UpdateViewCountJob {
     @Autowired
     private ArticleService articleService;
 
-    @Scheduled(cron = "0/5 * * * * ?")
-    public void updateViewCount(){
-        //获取redis中的浏览量
-        Map<String, Integer> viewCountMap = redisCache.getCacheMap("article:viewCount");
+    @Scheduled(cron = "0/10 * * * * ?")
+    public void updateViewCount() {
+        try {
+            //获取redis中的浏览量
+            Map<String, Integer> viewCountMap = redisCache.getCacheMap("article:viewCount");
 
-        List<Article> articles = viewCountMap.entrySet()
-                .stream()
-                .map(entry -> new Article(Long.valueOf(entry.getKey()), entry.getValue().longValue()))
-                .collect(Collectors.toList());
-        //更新到数据库中
-        articleService.updateBatchById(articles);
-
+            if (viewCountMap != null && !viewCountMap.isEmpty()) {
+                List<Article> articles = viewCountMap.entrySet()
+                        .stream()
+                        .map(entry -> new Article(Long.valueOf(entry.getKey()), entry.getValue().longValue()))
+                        .collect(Collectors.toList());
+                //更新到数据库中
+                articleService.updateBatchById(articles);
+            }
+        } catch (Exception e) {
+            // Log the exception
+            e.printStackTrace();
+        }
     }
 }
-
-

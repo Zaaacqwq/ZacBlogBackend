@@ -3,15 +3,18 @@ package com.zaaac.utils;
 import com.zaaac.domain.entity.LoginUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-public class SecurityUtils
-{
+
+public class SecurityUtils {
 
     /**
      * 获取用户
      **/
-    public static LoginUser getLoginUser()
-    {
-        return (LoginUser) getAuthentication().getPrincipal();
+    public static LoginUser getLoginUser() {
+        Authentication authentication = getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
+            return (LoginUser) authentication.getPrincipal();
+        }
+        return null; // or throw an exception
     }
 
     /**
@@ -21,12 +24,20 @@ public class SecurityUtils
         return SecurityContextHolder.getContext().getAuthentication();
     }
 
-    public static Boolean isAdmin(){
-        Long id = getLoginUser().getUser().getId();
-        return id != null && 1L == id;
+    public static Boolean isAdmin() {
+        LoginUser loginUser = getLoginUser();
+        if (loginUser != null && loginUser.getUser() != null) {
+            Long id = loginUser.getUser().getId();
+            return id != null && 1L == id;
+        }
+        return false;
     }
 
     public static Long getUserId() {
-        return getLoginUser().getUser().getId();
+        LoginUser loginUser = getLoginUser();
+        if (loginUser != null && loginUser.getUser() != null) {
+            return loginUser.getUser().getId();
+        }
+        return null;
     }
 }
