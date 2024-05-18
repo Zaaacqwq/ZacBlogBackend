@@ -23,7 +23,7 @@ public class SwaggerConfig {
     private ApiInfo apiInfo() {
         Contact contact = new Contact("Zac", "http://www.zaaac.ca", "zacchenzy@gmail.com");
         return new ApiInfoBuilder()
-                .title("文档标题1")
+                .title("Zac Blog API")
                 .description("文档描述2")
                 .contact(contact)   // 联系方式
                 .version("1.1.1")  // 版本

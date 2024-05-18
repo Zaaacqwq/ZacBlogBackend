@@ -32,4 +32,3 @@ public class ViewCountRunner implements CommandLineRunner {
         redisCache.setCacheMap("article:viewCount",viewCountMap);
     }
 }
-
